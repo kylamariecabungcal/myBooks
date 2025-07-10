@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'book_data.dart';
 
 class AddBookPage extends StatefulWidget {
   const AddBookPage({super.key});
@@ -13,63 +12,68 @@ class _AddBookPageState extends State<AddBookPage> {
   final _formKey = GlobalKey<FormState>();
   final titleController = TextEditingController();
   final authorController = TextEditingController();
-  final yearController = TextEditingController(); // NEW
+  final yearController = TextEditingController();
+
+  bool _isSubmitting = false;
 
   Future<void> submitBook() async {
-    final response = await http.post(
-      Uri.parse('https://example.com/books'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'title': titleController.text,
-        'author': authorController.text,
-        'year': yearController.text, // NEW
-      }),
-    );
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isSubmitting = true);
 
-    if (response.statusCode == 201) {
-      Navigator.pop(context); // Go back to HomePage
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add book')),
-      );
+      try {
+        await BookData.addBook(
+          titleController.text,
+          authorController.text,
+          yearController.text,
+        );
+        if (mounted) Navigator.pop(context, true);
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add book: $e')));
+      } finally {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('➕ Add Book')),
+      appBar: AppBar(title: const Text('Add Book')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          child: Column(children: [
-            TextFormField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-              validator: (value) => value!.isEmpty ? 'Enter title' : null,
-            ),
-            TextFormField(
-              controller: authorController,
-              decoration: const InputDecoration(labelText: 'Author'),
-              validator: (value) => value!.isEmpty ? 'Enter author' : null,
-            ),
-            TextFormField(
-              controller: yearController,
-              decoration: const InputDecoration(labelText: 'Year'),
-              keyboardType: TextInputType.number,
-              validator: (value) => value!.isEmpty ? 'Enter year' : null,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  submitBook();
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ]),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter a title' : null,
+              ),
+              TextFormField(
+                controller: authorController,
+                decoration: const InputDecoration(labelText: 'Author'),
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter an author' : null,
+              ),
+              TextFormField(
+                controller: yearController,
+                decoration: const InputDecoration(labelText: 'Year'),
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter a year' : null,
+              ),
+              const SizedBox(height: 20),
+              _isSubmitting
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: submitBook,
+                      child: const Text('Submit'),
+                    ),
+            ],
+          ),
         ),
       ),
     );
