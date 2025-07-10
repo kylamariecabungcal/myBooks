@@ -28,24 +28,38 @@ const Book = mongoose.model('Book', bookSchema);
 
 // Routes
 app.get('/api/books', async (req, res) => {
-  const books = await Book.find();
-  res.json(books);
+  try {
+    const books = await Book.find();
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch books.' });
+  }
 });
 
 app.post('/api/books', async (req, res) => {
-  const { title, author, year } = req.body;
-  if (!title || !author || !year) {
-    return res.status(400).json({ error: 'All fields are required.' });
+  try {
+    const { title, author, year } = req.body;
+    if (!title || !author || !year) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+    const newBook = new Book({ title, author, year });
+    await newBook.save();
+    res.status(201).json(newBook);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add book.' });
   }
-
-  const newBook = new Book({ title, author, year });
-  await newBook.save();
-  res.status(201).json(newBook);
 });
 
 app.delete('/api/books/:id', async (req, res) => {
-  await Book.findByIdAndDelete(req.params.id);
-  res.status(204).send();
+  try {
+    const deleted = await Book.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Book not found.' });
+    }
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete book.' });
+  }
 });
 
 // Start server

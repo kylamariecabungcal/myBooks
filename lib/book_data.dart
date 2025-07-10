@@ -25,7 +25,8 @@ class Book {
 }
 
 class BookData {
-  static const String baseUrl = 'http://localhost:3000/api/books';
+  // NOTE: If you are using a real device, replace the IP below with your computer's local network IP address (e.g., 192.168.1.5)
+  static const String baseUrl = 'http://192.168.1.12:3000/api/books';
 
   static Future<List<Book>> fetchBooks() async {
     final response = await http.get(Uri.parse(baseUrl));
@@ -33,7 +34,7 @@ class BookData {
       final List data = json.decode(response.body);
       return data.map((json) => Book.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to load books');
+      throw Exception('Failed to load books: ${response.statusCode}');
     }
   }
 
@@ -44,14 +45,21 @@ class BookData {
       body: json.encode({'title': title, 'author': author, 'year': year}),
     );
     if (response.statusCode != 201) {
-      throw Exception('Failed to add book');
+      String msg = 'Failed to add book';
+      try {
+        msg = json.decode(response.body)['error'] ?? msg;
+      } catch (_) {}
+      throw Exception(msg);
     }
   }
 
   static Future<void> deleteBook(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/$id'));
+    if (response.statusCode == 404) {
+      throw Exception('Book not found');
+    }
     if (response.statusCode != 204) {
-      throw Exception('Failed to delete book');
+      throw Exception('Failed to delete book: ${response.statusCode}');
     }
   }
 }

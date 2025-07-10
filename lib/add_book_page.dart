@@ -28,9 +28,13 @@ class _AddBookPageState extends State<AddBookPage> {
         );
         if (mounted) Navigator.pop(context, true);
       } catch (e) {
+        String msg = e.toString();
+        if (msg.contains('Failed host lookup')) {
+          msg = 'Cannot connect to server. Is it running?';
+        }
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add book: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to add book: $msg')));
       } finally {
         setState(() => _isSubmitting = false);
       }
@@ -40,7 +44,11 @@ class _AddBookPageState extends State<AddBookPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Book')),
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: const Text('Add Book'),
+        backgroundColor: Colors.indigo,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -49,28 +57,66 @@ class _AddBookPageState extends State<AddBookPage> {
             children: [
               TextFormField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  prefixIcon: const Icon(Icons.book),
+                ),
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter a title' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: authorController,
-                decoration: const InputDecoration(labelText: 'Author'),
+                decoration: InputDecoration(
+                  labelText: 'Author',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  prefixIcon: const Icon(Icons.person),
+                ),
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter an author' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: yearController,
-                decoration: const InputDecoration(labelText: 'Year'),
+                decoration: InputDecoration(
+                  labelText: 'Year',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  prefixIcon: const Icon(Icons.date_range),
+                ),
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter a year' : null,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _isSubmitting
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: submitBook,
-                      child: const Text('Submit'),
+                  : SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: submitBook,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Submit'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
             ],
           ),

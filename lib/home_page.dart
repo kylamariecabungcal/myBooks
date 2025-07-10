@@ -10,6 +10,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   String? _sortBy;
   List<Book> books = [];
+  bool _isDeleting = false;
 
   @override
   void initState() {
@@ -39,7 +40,10 @@ class HomePageState extends State<HomePage> {
         (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
       );
     } else if (_sortBy == 'year') {
-      sorted.sort((a, b) => a.year.compareTo(b.year));
+      sorted.sort(
+        (a, b) =>
+            int.tryParse(a.year)?.compareTo(int.tryParse(b.year) ?? 0) ?? 0,
+      );
     }
     return sorted;
   }
@@ -110,34 +114,54 @@ class HomePageState extends State<HomePage> {
                     isThreeLine: true,
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Delete Book'),
-                            content: const Text(
-                              'Are you sure you want to delete this book?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  await BookData.deleteBook(book.id);
-                                  loadBooks();
-                                },
-                                child: const Text(
-                                  'Delete',
-                                  style: TextStyle(color: Colors.red),
+                      onPressed: _isDeleting
+                          ? null
+                          : () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text('Delete Book'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this book?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        Navigator.pop(context);
+                                        setState(() => _isDeleting = true);
+                                        try {
+                                          await BookData.deleteBook(book.id);
+                                          await loadBooks();
+                                        } catch (e) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Failed to delete book: $e',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        } finally {
+                                          if (mounted)
+                                            setState(() => _isDeleting = false);
+                                        }
+                                      },
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                              );
+                            },
                     ),
                   ),
                 );
