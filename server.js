@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); // ✅ ITO LANG ANG ISA
+const cors = require('cors'); 
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const PORT = 3000;
@@ -8,6 +10,19 @@ const PORT = 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+
+// Multer configuration for image uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // MongoDB connection
 mongoose.connect('mongodb://127.0.0.1:27017/bookmanager', {
@@ -23,6 +38,7 @@ const bookSchema = new mongoose.Schema({
   title: String,
   author: String,
   year: String,
+  imageUrl: String,
 });
 const Book = mongoose.model('Book', bookSchema);
 
@@ -36,17 +52,55 @@ app.get('/api/books', async (req, res) => {
   }
 });
 
-app.post('/api/books', async (req, res) => {
+app.post('/api/books', upload.single('image'), async (req, res) => {
   try {
     const { title, author, year } = req.body;
     if (!title || !author || !year) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
-    const newBook = new Book({ title, author, year });
+    
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const newBook = new Book({ title, author, year, imageUrl });
     await newBook.save();
     res.status(201).json(newBook);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add book.' });
+  }
+});
+
+app.put('/api/books/:id', upload.single('image'), async (req, res) => {
+  try {
+    console.log('Update request received for book ID:', req.params.id);
+    console.log('Request body:', req.body);
+    
+    const { title, author, year } = req.body;
+    if (!title || !author || !year) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+    
+    const updateData = { title, author, year };
+    if (req.file) {
+      updateData.imageUrl = `/uploads/${req.file.filename}`;
+    }
+    
+    console.log('Update data:', updateData);
+    
+    const updatedBook = await Book.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+    
+    if (!updatedBook) {
+      console.log('Book not found with ID:', req.params.id);
+      return res.status(404).json({ error: 'Book not found.' });
+    }
+    
+    console.log('Book updated successfully:', updatedBook);
+    res.json(updatedBook);
+  } catch (err) {
+    console.error('Error updating book:', err);
+    res.status(500).json({ error: 'Failed to update book.' });
   }
 });
 
