@@ -117,6 +117,7 @@ app.delete('/api/books/:id', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`📚 Server running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`📚 Server running at http://0.0.0.0:${PORT}`);
+  console.log(`📚 Access from other devices: http://192.168.1.25:${PORT}`);
 });

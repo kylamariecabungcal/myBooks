@@ -150,7 +150,6 @@ class HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.indigo.shade600,
         leading: IconButton(
-          // ✅ Added arrow back button
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pushReplacement(
@@ -251,7 +250,7 @@ class HomePageState extends State<HomePage> {
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
                                       child: Image.network(
-                                        'http://localhost:3000${book.imageUrl}',
+                                        'http://192.168.1.25:3000${book.imageUrl}',
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (context, error, stackTrace) {

@@ -29,7 +29,7 @@ class Book {
 
 class BookData {
   // NOTE: If you are using a real device, replace the IP below with your computer's local network IP address (e.g., 192.168.1.5)
-  static const String baseUrl = 'http://192.168.193.55:3000/api/books';
+  static const String baseUrl = 'http://192.168.1.25:3000/api/books';
 
   static Future<List<Book>> fetchBooks() async {
     final response = await http.get(Uri.parse(baseUrl));
@@ -47,13 +47,18 @@ class BookData {
     String year, [
     String? imagePath,
   ]) async {
+    print('BookData.addBook called with imagePath: $imagePath');
+
     var request = http.MultipartRequest('POST', Uri.parse(baseUrl));
     request.fields['title'] = title;
     request.fields['author'] = author;
     request.fields['year'] = year;
 
     if (imagePath != null) {
+      print('Adding image file: $imagePath');
       request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+    } else {
+      print('No image path provided');
     }
 
     final response = await request.send();

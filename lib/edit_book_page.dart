@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'book_data.dart';
 
 class EditBookPage extends StatefulWidget {
@@ -26,7 +28,11 @@ class _EditBookPageState extends State<EditBookPage> {
   late TextEditingController titleController;
   late TextEditingController authorController;
   late TextEditingController yearController;
+  final ImagePicker _picker = ImagePicker();
+
   bool _isSubmitting = false;
+  String? _selectedImagePath;
+  bool _keepExistingImage = true;
 
   @override
   void initState() {
@@ -36,16 +42,77 @@ class _EditBookPageState extends State<EditBookPage> {
     yearController = TextEditingController(text: widget.year);
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImagePath = image.path;
+          _keepExistingImage = false;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Image Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> submitEdit() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 
       try {
+        // If we have a new image selected, use it. Otherwise, keep existing image
+        String? imagePathToUse = _selectedImagePath;
+        if (_selectedImagePath == null && _keepExistingImage) {
+          imagePathToUse = null; // Keep existing image
+        }
+
         await BookData.updateBook(
           widget.bookId,
           titleController.text,
           authorController.text,
           yearController.text,
+          imagePathToUse,
         );
 
         if (!mounted) return;
@@ -104,6 +171,7 @@ class _EditBookPageState extends State<EditBookPage> {
         child: Center(
           child: Card(
             elevation: 6,
+            color: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -122,6 +190,133 @@ class _EditBookPageState extends State<EditBookPage> {
                         color: Colors.indigo,
                       ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // Image Selection Section
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Book Cover Image',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Show existing image if available
+                          if (widget.imageUrl != null &&
+                              _selectedImagePath == null) ...[
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  'http://192.168.1.25:3000${widget.imageUrl}',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: const Icon(
+                                        Icons.image,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Current image',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // Show new selected image
+                          if (_selectedImagePath != null) ...[
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.green),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(_selectedImagePath!),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'New image',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _showImageSourceDialog,
+                                icon: const Icon(Icons.add_a_photo),
+                                label: const Text('Change Image'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.indigo,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                              if (_selectedImagePath != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedImagePath = null;
+                                        _keepExistingImage = true;
+                                      });
+                                    },
+                                    icon: const Icon(Icons.undo),
+                                    label: const Text('Keep Original'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
                     _buildTextField(
                       controller: titleController,
@@ -144,7 +339,7 @@ class _EditBookPageState extends State<EditBookPage> {
                       keyboardType: TextInputType.number,
                       validatorMsg: 'Please enter a year',
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 20),
                     _isSubmitting
                         ? const CircularProgressIndicator()
                         : SizedBox(
