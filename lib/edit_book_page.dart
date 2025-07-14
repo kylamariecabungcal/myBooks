@@ -225,7 +225,7 @@ class _EditBookPageState extends State<EditBookPage> {
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  'http://192.168.1.25:3000${widget.imageUrl}',
+                                  'http://192.168.193.63:3000${widget.imageUrl}',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(

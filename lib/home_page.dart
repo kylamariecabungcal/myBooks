@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'add_book_page.dart';
 import 'edit_book_page.dart';
 import 'book_data.dart';
-import 'welcome_page.dart'; // ✅ Added import
+import 'welcome_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -250,7 +250,7 @@ class HomePageState extends State<HomePage> {
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
                                       child: Image.network(
-                                        'http://192.168.1.25:3000${book.imageUrl}',
+                                        'http://192.168.193.63:3000${book.imageUrl}',
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (context, error, stackTrace) {

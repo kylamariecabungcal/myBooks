@@ -29,7 +29,7 @@ class Book {
 
 class BookData {
   // NOTE: If you are using a real device, replace the IP below with your computer's local network IP address (e.g., 192.168.1.5)
-  static const String baseUrl = 'http://192.168.1.25:3000/api/books';
+  static const String baseUrl = 'http://192.168.193.63:3000/api/books';
 
   static Future<List<Book>> fetchBooks() async {
     final response = await http.get(Uri.parse(baseUrl));
