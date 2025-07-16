@@ -175,7 +175,7 @@ class HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.indigo.shade600,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pushReplacement(
               context,

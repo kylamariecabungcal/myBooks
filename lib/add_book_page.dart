@@ -146,6 +146,10 @@ class _AddBookPageState extends State<AddBookPage> {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -274,24 +278,24 @@ class _AddBookPageState extends State<AddBookPage> {
                     _isSubmitting
                         ? const CircularProgressIndicator()
                         : SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton.icon(
-                              onPressed: submitBook,
-                              icon: const Icon(Icons.save),
-                              label: const Text(
-                                'Submit',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.indigo,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: submitBook,
+                        icon: const Icon(Icons.save),
+                        label: const Text(
+                          'Submit',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
