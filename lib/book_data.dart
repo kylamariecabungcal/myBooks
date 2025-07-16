@@ -7,6 +7,8 @@ class Book {
   final String author;
   final String year;
   final String? imageUrl;
+  final String? prologue;
+  final bool read;
 
   Book({
     required this.id,
@@ -14,22 +16,38 @@ class Book {
     required this.author,
     required this.year,
     this.imageUrl,
+    this.prologue,
+    this.read = false,
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
-      id: json['_id'],
+      id: json['_id'] ?? json['id'],
       title: json['title'],
       author: json['author'],
       year: json['year'],
       imageUrl: json['imageUrl'],
+      prologue: json['prologue'],
+      read: json['read'] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'author': author,
+      'year': year,
+      'imageUrl': imageUrl,
+      'prologue': prologue,
+      'read': read,
+    };
   }
 }
 
 class BookData {
   // NOTE: If you are using a real device, replace the IP below with your computer's local network IP address (e.g., 192.168.1.5)
-  static const String baseUrl = 'http://192.168.193.63:3000/api/books';
+  static const String baseUrl = 'http://192.168.193.69:3000/api/books';
 
   static Future<List<Book>> fetchBooks() async {
     final response = await http.get(Uri.parse(baseUrl));
@@ -87,36 +105,18 @@ class BookData {
     String id,
     String title,
     String author,
-    String year, [
+    String year,
     String? imagePath,
-  ]) async {
+  ) async {
     print('Updating book with ID: $id');
     print('Update data: title=$title, author=$author, year=$year');
-
-    var request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/$id'));
-    request.fields['title'] = title;
-    request.fields['author'] = author;
-    request.fields['year'] = year;
-
-    if (imagePath != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-    }
-
-    final response = await request.send();
-    print('Response status: ${response.statusCode}');
-
-    if (response.statusCode == 404) {
-      throw Exception('Book not found');
-    }
-    if (response.statusCode != 200) {
-      String msg = 'Failed to update book';
-      try {
-        final responseBody = await response.stream.bytesToString();
-        final jsonResponse = json.decode(responseBody);
-        msg = jsonResponse['error'] ?? msg;
-        print('Error response: $msg');
-      } catch (_) {}
-      throw Exception('$msg (Status: ${response.statusCode})');
-    }
+    // When sending data to the backend, do not include prologue
+    // Example (if using a map):
+    // final data = {
+    //   'title': title,
+    //   'author': author,
+    //   'year': year,
+    //   'imagePath': imagePath,
+    // };
   }
 }

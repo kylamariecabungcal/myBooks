@@ -8,7 +8,12 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow all methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow common headers
+  credentials: true // Allow credentials
+}));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
@@ -58,9 +63,13 @@ app.post('/api/books', upload.single('image'), async (req, res) => {
     if (!title || !author || !year) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
-    
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-    const newBook = new Book({ title, author, year, imageUrl });
+    const newBook = new Book({
+      title,
+      author,
+      year,
+      imageUrl
+    });
     await newBook.save();
     res.status(201).json(newBook);
   } catch (err) {
@@ -70,36 +79,28 @@ app.post('/api/books', upload.single('image'), async (req, res) => {
 
 app.put('/api/books/:id', upload.single('image'), async (req, res) => {
   try {
-    console.log('Update request received for book ID:', req.params.id);
-    console.log('Request body:', req.body);
-    
     const { title, author, year } = req.body;
     if (!title || !author || !year) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
-    
-    const updateData = { title, author, year };
+    const updateData = {
+      title,
+      author,
+      year
+    };
     if (req.file) {
       updateData.imageUrl = `/uploads/${req.file.filename}`;
     }
-    
-    console.log('Update data:', updateData);
-    
     const updatedBook = await Book.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true }
     );
-    
     if (!updatedBook) {
-      console.log('Book not found with ID:', req.params.id);
       return res.status(404).json({ error: 'Book not found.' });
     }
-    
-    console.log('Book updated successfully:', updatedBook);
     res.json(updatedBook);
   } catch (err) {
-    console.error('Error updating book:', err);
     res.status(500).json({ error: 'Failed to update book.' });
   }
 });
@@ -119,5 +120,5 @@ app.delete('/api/books/:id', async (req, res) => {
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`📚 Server running at http://0.0.0.0:${PORT}`);
-  console.log(`📚 Access from other devices: http://192.168.193.63:${PORT}`);
+  console.log(`📚 Access from other devices: http://192.168.193.69:${PORT}`);
 });

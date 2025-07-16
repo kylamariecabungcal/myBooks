@@ -139,8 +139,13 @@ class _AddBookPageState extends State<AddBookPage> {
       backgroundColor: Colors.indigo[50],
       appBar: AppBar(
         title: const Text('Add Book'),
-        backgroundColor: Colors.indigo,
+        backgroundColor: Colors.indigo.shade600,
         elevation: 2,
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

@@ -42,6 +42,14 @@ class _EditBookPageState extends State<EditBookPage> {
     yearController = TextEditingController(text: widget.year);
   }
 
+  @override
+  void dispose() {
+    titleController.dispose();
+    authorController.dispose();
+    yearController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -50,14 +58,15 @@ class _EditBookPageState extends State<EditBookPage> {
         maxHeight: 1024,
         imageQuality: 85,
       );
-
       if (image != null) {
         setState(() {
           _selectedImagePath = image.path;
           _keepExistingImage = false;
         });
+        print('Selected image path: $_selectedImagePath');
       }
     } catch (e) {
+      print('Error picking image: $e');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
@@ -101,10 +110,9 @@ class _EditBookPageState extends State<EditBookPage> {
       setState(() => _isSubmitting = true);
 
       try {
-        // If we have a new image selected, use it. Otherwise, keep existing image
         String? imagePathToUse = _selectedImagePath;
         if (_selectedImagePath == null && _keepExistingImage) {
-          imagePathToUse = null; // Keep existing image
+          imagePathToUse = null;
         }
 
         await BookData.updateBook(
@@ -117,7 +125,6 @@ class _EditBookPageState extends State<EditBookPage> {
 
         if (!mounted) return;
 
-        // Show success dialog
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -132,7 +139,28 @@ class _EditBookPageState extends State<EditBookPage> {
                 Text('Success'),
               ],
             ),
-            content: const Text('Book successfully updated!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Book successfully updated!'),
+                const SizedBox(height: 16),
+                if (imagePathToUse != null)
+                  Image.file(
+                    File(imagePathToUse),
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  )
+                else if (widget.imageUrl != null)
+                  Image.network(
+                    'http://192.168.193.69:3000${widget.imageUrl}',
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         );
 
@@ -159,6 +187,7 @@ class _EditBookPageState extends State<EditBookPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('EditBookPage imageUrl: ${widget.imageUrl}');
     return Scaffold(
       backgroundColor: Colors.indigo[50],
       appBar: AppBar(
@@ -225,7 +254,7 @@ class _EditBookPageState extends State<EditBookPage> {
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  'http://192.168.193.63:3000${widget.imageUrl}',
+                                  'http://192.168.193.69:3000${widget.imageUrl}',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
@@ -265,6 +294,16 @@ class _EditBookPageState extends State<EditBookPage> {
                                 child: Image.file(
                                   File(_selectedImagePath!),
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    print('Image.file error: $error');
+                                    return Container(
+                                      color: Colors.red[100],
+                                      child: const Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ),
